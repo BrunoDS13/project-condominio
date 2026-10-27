@@ -237,3 +237,10 @@ def test_cadastrar_unidade_incompleta_ou_grande_demais(client):
     assert "Preencha o bloco" in html
     html = client.post("/unidades", data={"bloco": "A", "numero": "9", "morador": "X" * 81}, follow_redirects=True).get_data(as_text=True)
     assert "grande demais" in html
+
+
+def test_horario_livre_aponta_para_o_formulario(client, tmp_path):
+    salao = id_da_area(tmp_path, "Salão de festas")
+    html = client.get(f"/areas/{salao}?data=2026-11-05").get_data(as_text=True)
+    assert 'id="reservar"' in html
+    assert "#reservar" in html  # o link do horário livre desce até o formulário

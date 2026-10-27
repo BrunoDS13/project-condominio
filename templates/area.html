@@ -25,14 +25,14 @@
             {% if f.reserva %}
               <span class="faixa-estado">Reservado · Bloco {{ f.reserva['bloco'] }}, apto {{ f.reserva['numero'] }}</span>
             {% else %}
-              <a class="faixa-estado" href="{{ url_for('area', area_id=area['id'], data=data, inicio=f.inicio, fim=f.fim) }}">Livre</a>
+              <a class="faixa-estado" href="{{ url_for('area', area_id=area['id'], data=data, inicio=f.inicio, fim=f.fim, _anchor='reservar') }}">Livre</a>
             {% endif %}
           </li>
         {% endfor %}
       </ul>
     </section>
 
-    <section class="painel-reserva" aria-labelledby="titulo-reserva">
+    <section class="painel-reserva" id="reservar" aria-labelledby="titulo-reserva">
       <h2 id="titulo-reserva">Reservar</h2>
       <form method="post" action="{{ url_for('reservar') }}" class="formulario">
         <input type="hidden" name="area_id" value="{{ area['id'] }}">
