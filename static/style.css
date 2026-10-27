@@ -57,3 +57,47 @@ a { color: inherit; }
   .conteudo { padding: 24px 16px 48px; }
   .topo-interno { padding: 12px 16px; }
 }
+
+.botao { display: inline-block; text-align: center; text-decoration: none; padding: 10px 18px; border-radius: 10px; border: 1px solid var(--tinta); color: var(--tinta); font: inherit; font-weight: 600; background: var(--fundo); cursor: pointer; }
+.botao:hover { background: var(--superficie); }
+.botao.principal { background: var(--destaque); border-color: var(--destaque); color: #fff; }
+.botao.principal:hover { background: var(--destaque-escuro); border-color: var(--destaque-escuro); }
+
+.migalha { margin: 0 0 12px; font-size: .9rem; }
+.migalha a { color: var(--suave); text-decoration: none; }
+.migalha a:hover { color: var(--tinta); text-decoration: underline; }
+
+.seletor-datas { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 28px; }
+.seletor-datas a { flex: 0 0 auto; width: 62px; padding: 8px 0; text-align: center; text-decoration: none; border: 1px solid var(--linha); border-radius: 12px; display: flex; flex-direction: column; line-height: 1.25; }
+.seletor-datas small { color: var(--suave); text-transform: uppercase; font-size: .68rem; letter-spacing: .04em; }
+.seletor-datas strong { color: var(--tinta); font-size: 1.15rem; }
+.seletor-datas a:hover { border-color: var(--tinta); }
+.seletor-datas a[aria-current="date"] { border: 2px solid var(--tinta); background: var(--superficie); padding: 7px 0; }
+
+.duas-colunas { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 40px; align-items: start; }
+.duas-colunas h2 { margin-bottom: 14px; }
+
+.faixas { list-style: none; margin: 0; padding: 0; border: 1px solid var(--linha); border-radius: 14px; overflow: hidden; }
+.faixa { display: grid; grid-template-columns: 64px 1fr; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--linha-clara); }
+.faixa:last-child { border-bottom: 0; }
+.faixa-hora { color: var(--suave); font-variant-numeric: tabular-nums; }
+.faixa.livre .faixa-estado { color: var(--tinta); font-weight: 600; text-decoration: none; padding: 2px 0; }
+.faixa.livre:hover { background: var(--superficie); }
+.faixa.livre .faixa-estado:hover { color: var(--destaque); }
+.faixa.ocupada { background: var(--superficie); }
+.faixa.ocupada .faixa-estado { color: var(--suave); }
+
+.painel-reserva { border: 1px solid var(--linha); border-radius: 14px; padding: 22px; position: sticky; top: 84px; }
+.painel-reserva h3 { margin: 24px 0 8px; font-size: 1rem; }
+.formulario { display: grid; gap: 14px; }
+.formulario label { display: grid; gap: 4px; font-size: .85rem; font-weight: 600; color: var(--tinta); }
+.formulario small { font-weight: 400; color: var(--suave); }
+.formulario input, .formulario select { font: inherit; font-weight: 400; color: var(--tinta); padding: 10px 12px; border: 1px solid var(--linha); border-radius: 10px; background: var(--fundo); min-width: 0; }
+.formulario input:focus, .formulario select:focus { outline: 2px solid var(--tinta); outline-offset: 0; border-color: var(--tinta); }
+.par { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.regras { margin: 0; padding-left: 18px; color: var(--suave); font-size: .9rem; display: grid; gap: 4px; }
+
+@media (max-width: 860px) {
+  .duas-colunas { grid-template-columns: 1fr; gap: 28px; }
+  .painel-reserva { position: static; }
+}

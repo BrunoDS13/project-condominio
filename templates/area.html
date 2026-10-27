@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ area['nome'] }} | Residencial Aurora{% endblock %}
+
+{% block conteudo %}
+  <p class="migalha"><a href="{{ url_for('index') }}">← Todas as áreas</a></p>
+  <h1>{{ area['nome'] }}</h1>
+  <p class="subtitulo">{{ area['descricao'] }} Capacidade para {{ area['capacidade'] }} pessoas, aberta das {{ area['abre'] }} às {{ area['fecha'] }}.</p>
+
+  <nav class="seletor-datas" aria-label="Escolher a data">
+    {% for d in datas %}
+      <a href="{{ url_for('area', area_id=area['id'], data=d.iso) }}" {% if d.selecionada %}aria-current="date"{% endif %}>
+        <small>{{ d.semana }}</small><strong>{{ d.numero }}</strong><small>{{ d.mes }}</small>
+      </a>
+    {% endfor %}
+  </nav>
+
+  <div class="duas-colunas">
+    <section aria-labelledby="titulo-horarios">
+      <h2 id="titulo-horarios">Horários de {{ data|data_curta }}</h2>
+      <ul class="faixas">
+        {% for f in faixas %}
+          <li class="faixa {{ 'ocupada' if f.reserva else 'livre' }}">
+            <span class="faixa-hora">{{ f.inicio }}</span>
+            {% if f.reserva %}
+              <span class="faixa-estado">Reservado · Bloco {{ f.reserva['bloco'] }}, apto {{ f.reserva['numero'] }}</span>
+            {% else %}
+              <a class="faixa-estado" href="{{ url_for('area', area_id=area['id'], data=data, inicio=f.inicio, fim=f.fim) }}">Livre</a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="painel-reserva" aria-labelledby="titulo-reserva">
+      <h2 id="titulo-reserva">Reservar</h2>
+      <form method="post" action="{{ url_for('reservar') }}" class="formulario">
+        <input type="hidden" name="area_id" value="{{ area['id'] }}">
+
+        <label>Unidade
+          <select name="unidade_id" required>
+            <option value="" disabled {{ 'selected' if not unidade_escolhida }}>Escolha a unidade</option>
+            {% for u in unidades %}
+              <option value="{{ u['id'] }}" {{ 'selected' if u['id'] == unidade_escolhida }}>Bloco {{ u['bloco'] }}, apto {{ u['numero'] }} · {{ u['morador'] }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label>Data
+          <input type="date" name="data" value="{{ data }}" min="{{ hoje }}" max="{{ limite }}" required>
+        </label>
+
+        <div class="par">
+          <label>Início <input type="time" name="inicio" value="{{ inicio }}" required></label>
+          <label>Término <input type="time" name="fim" value="{{ fim }}" required></label>
+        </div>
+
+        <label>Observação <small>(opcional)</small>
+          <input type="text" name="observacao" value="{{ observacao }}" maxlength="120" placeholder="Ex.: aniversário">
+        </label>
+
+        <button type="submit" class="botao principal">Confirmar reserva</button>
+      </form>
+
+      <h3>Regras desta área</h3>
+      <ul class="regras">
+        <li>Duração máxima de {{ area['duracao_max_horas'] }} h por reserva.</li>
+        <li>Reservar com pelo menos {{ area['antecedencia_min_horas'] }} h de antecedência e até {{ max_dias }} dias antes.</li>
+        <li>Cada unidade pode ter até {{ max_reservas_mes }} reservas confirmadas por mês.</li>
+        <li>Cancelamento com pelo menos {{ horas_cancelamento }} h de antecedência.</li>
+      </ul>
+    </section>
+  </div>
+{% endblock %}

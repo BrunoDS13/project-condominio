@@ -66,3 +66,87 @@ def test_chave_secreta_vem_da_variavel_de_ambiente(tmp_path, monkeypatch):
 def test_sem_variavel_a_chave_e_aleatoria(tmp_path, monkeypatch):
     monkeypatch.delenv("SECRET_KEY", raising=False)
     assert criar_app(tmp_path / "a.db").config["SECRET_KEY"] != criar_app(tmp_path / "b.db").config["SECRET_KEY"]
+
+
+# --- página da área e reservas -------------------------------------------
+
+def id_da_area(tmp_path, nome):
+    con = db.conectar(tmp_path / "teste.db")
+    return next(a["id"] for a in db.listar_areas(con) if a["nome"] == nome)
+
+
+def test_pagina_da_area_mostra_a_linha_do_tempo(client, tmp_path):
+    salao = id_da_area(tmp_path, "Salão de festas")
+    html = client.get(f"/areas/{salao}?data=2026-10-30").get_data(as_text=True)  # reserva do exemplo: qui 30, 18:00-22:00
+    assert "Salão de festas" in html
+    assert html.count("faixa ocupada") == 4  # 18h, 19h, 20h e 21h
+    assert "Reservado · Bloco A, apto 101" in html
+    assert "09:00" in html and "22:00" in html
+
+
+def test_horario_livre_leva_ao_formulario_preenchido(client, tmp_path):
+    salao = id_da_area(tmp_path, "Salão de festas")
+    html = client.get(f"/areas/{salao}?data=2026-11-05&inicio=14:00&fim=15:00").get_data(as_text=True)
+    assert 'name="inicio" value="14:00"' in html
+    assert 'name="fim" value="15:00"' in html
+    assert 'name="data" value="2026-11-05"' in html
+
+
+def test_fim_padrao_e_uma_hora_depois_do_inicio(client, tmp_path):
+    salao = id_da_area(tmp_path, "Salão de festas")
+    html = client.get(f"/areas/{salao}?data=2026-11-05&inicio=14:00").get_data(as_text=True)
+    assert 'name="fim" value="15:00"' in html
+
+
+def test_data_invalida_cai_em_hoje(client, tmp_path):
+    salao = id_da_area(tmp_path, "Salão de festas")
+    html = client.get(f"/areas/{salao}?data=lixo").get_data(as_text=True)
+    assert 'name="data" value="2026-10-27"' in html
+
+
+def test_area_inexistente_da_404(client):
+    assert client.get("/areas/999").status_code == 404
+
+
+def test_seletor_mostra_14_dias(client, tmp_path):
+    salao = id_da_area(tmp_path, "Salão de festas")
+    html = client.get(f"/areas/{salao}").get_data(as_text=True)
+    assert html.count("<strong>") >= 14
+    assert 'aria-current="date"' in html
+
+
+def dados_da_reserva(tmp_path, **mudancas):
+    con = db.conectar(tmp_path / "teste.db")
+    salao = next(a["id"] for a in db.listar_areas(con) if a["nome"] == "Salão de festas")
+    unidade = db.listar_unidades(con)[3]["id"]  # A 202: sem reservas de exemplo no salão
+    dados = {"area_id": salao, "unidade_id": unidade, "data": "2026-11-20", "inicio": "14:00", "fim": "18:00", "observacao": "Teste"}
+    dados.update(mudancas)
+    return dados
+
+
+def test_reservar_com_sucesso(client, tmp_path):
+    dados = dados_da_reserva(tmp_path)
+    resposta = client.post("/reservar", data=dados, follow_redirects=True)
+    html = resposta.get_data(as_text=True)
+    assert "Reserva confirmada para sex, 20 nov, das 14:00 às 18:00." in html
+    assert "Reservado · Bloco A, apto 202" in html
+
+
+def test_reservar_com_conflito_mostra_o_motivo_e_mantem_o_formulario(client, tmp_path):
+    dados = dados_da_reserva(tmp_path, data="2026-10-30", inicio="19:00", fim="21:00")  # conflita com A 101 (18-22)
+    html = client.post("/reservar", data=dados, follow_redirects=True).get_data(as_text=True)
+    assert "Já existe uma reserva neste horário, das 18:00 às 22:00." in html
+    assert 'name="inicio" value="19:00"' in html
+    assert 'name="observacao" value="Teste"' in html
+
+
+def test_reservar_mostra_todos_os_motivos_de_uma_vez(client, tmp_path):
+    dados = dados_da_reserva(tmp_path, data="2026-10-27", inicio="07:00", fim="20:00")
+    html = client.post("/reservar", data=dados, follow_redirects=True).get_data(as_text=True)
+    assert "funciona das 09:00 às 23:00" in html
+    assert "duração máxima" in html
+    assert "já passou" in html or "antecedência" in html
+
+
+def test_reservar_sem_area_da_400(client, tmp_path):
+    assert client.post("/reservar", data={"unidade_id": 1}).status_code == 400
