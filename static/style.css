@@ -121,3 +121,11 @@ a { color: inherit; }
 .vazio { color: var(--suave); padding: 32px 0; }
 .tabela-rolavel { overflow-x: auto; }
 .so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.painel-simples { border: 1px solid var(--linha); border-radius: 14px; padding: 20px; margin-bottom: 28px; }
+.painel-simples h2 { margin-bottom: 14px; }
+.filtros input { font: inherit; font-weight: 400; padding: 9px 12px; border: 1px solid var(--linha); border-radius: 10px; background: var(--fundo); color: var(--tinta); min-width: 0; }
+.filtros input:focus, .filtros select:focus { outline: 2px solid var(--tinta); border-color: var(--tinta); }
+.filtros .largo { flex: 1 1 220px; }
+.filtros .largo input { width: 100%; }
+.tabela .direita, .tabela th.direita { text-align: right; padding-right: 0; }

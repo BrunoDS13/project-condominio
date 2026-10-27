@@ -183,6 +183,34 @@ def criar_app(caminho_banco=db.CAMINHO_PADRAO, agora=datetime.now):
             flash(motivo, "erro")
         return redirect(url_for("reservas"))
 
+    @app.route("/unidades", methods=["GET", "POST"])
+    def unidades():
+        con = conexao()
+        if request.method == "POST":
+            bloco = request.form.get("bloco", "").strip().upper()
+            numero = request.form.get("numero", "").strip()
+            morador = request.form.get("morador", "").strip()
+            if not (bloco and numero and morador):
+                flash("Preencha o bloco, o apartamento e o nome do morador.", "erro")
+            elif len(bloco) > 10 or len(numero) > 10 or len(morador) > 80:
+                flash("Algum dos campos está grande demais.", "erro")
+            else:
+                try:
+                    db.adicionar_unidade(con, bloco, numero, morador)
+                    flash(f"Bloco {bloco}, apto {numero} cadastrado.", "ok")
+                except sqlite3.IntegrityError:
+                    flash(f"Bloco {bloco}, apto {numero} já está cadastrado.", "erro")
+            con.close()
+            return redirect(url_for("unidades"))
+
+        mes = agora().strftime("%Y-%m")
+        linhas = [
+            {"unidade": u, "reservas_no_mes": db.contar_reservas_da_unidade_no_mes(con, u["id"], mes)}
+            for u in db.listar_unidades(con)
+        ]
+        con.close()
+        return render_template("unidades.html", linhas=linhas, limite=regras.LIMITE_RESERVAS_MES_POR_UNIDADE)
+
     return app
 
 

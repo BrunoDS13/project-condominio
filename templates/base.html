@@ -20,6 +20,7 @@
       <nav class="menu" aria-label="Principal">
         <a href="{{ url_for('index') }}" {% if request.endpoint in ('index', 'area') %}aria-current="page"{% endif %}>Áreas</a>
         <a href="{{ url_for('reservas') }}" {% if request.endpoint == 'reservas' %}aria-current="page"{% endif %}>Reservas</a>
+        <a href="{{ url_for('unidades') }}" {% if request.endpoint == 'unidades' %}aria-current="page"{% endif %}>Unidades</a>
       </nav>
     </div>
   </header>

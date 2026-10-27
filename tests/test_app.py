@@ -208,3 +208,32 @@ def test_cancelar_reserva_inexistente(client):
 
 def test_cancelar_so_aceita_post(client):
     assert client.get("/reservas/1/cancelar").status_code == 405
+
+
+# --- unidades ------------------------------------------------------------
+
+def test_lista_de_unidades_mostra_o_uso_do_mes(client):
+    html = client.get("/unidades").get_data(as_text=True)
+    assert "Família Almeida" in html
+    assert "1 de 3" in html  # A 101: uma reserva no mês
+    assert html.count("<tr") == 1 + len(seed.UNIDADES)
+
+
+def test_cadastrar_unidade(client):
+    resposta = client.post("/unidades", data={"bloco": " c ", "numero": "301", "morador": "Família Nunes"}, follow_redirects=True)
+    html = resposta.get_data(as_text=True)
+    assert "Bloco C, apto 301 cadastrado." in html
+    assert "Família Nunes" in html
+
+
+def test_cadastrar_unidade_repetida(client):
+    html = client.post("/unidades", data={"bloco": "A", "numero": "101", "morador": "Outra"}, follow_redirects=True).get_data(as_text=True)
+    assert "Bloco A, apto 101 já está cadastrado." in html
+    assert html.count("<tr") == 1 + len(seed.UNIDADES)
+
+
+def test_cadastrar_unidade_incompleta_ou_grande_demais(client):
+    html = client.post("/unidades", data={"bloco": "A", "numero": "", "morador": "X"}, follow_redirects=True).get_data(as_text=True)
+    assert "Preencha o bloco" in html
+    html = client.post("/unidades", data={"bloco": "A", "numero": "9", "morador": "X" * 81}, follow_redirects=True).get_data(as_text=True)
+    assert "grande demais" in html
