@@ -51,7 +51,8 @@ a { color: inherit; }
 .dados div { display: flex; justify-content: space-between; }
 .dados dt { color: var(--suave); }
 .dados dd { margin: 0; color: var(--tinta); font-weight: 500; }
-.proxima { margin: auto 0 0; padding-top: 10px; border-top: 1px solid var(--linha-clara); font-size: .9rem; color: var(--suave); }
+.cartao-rodape { margin-top: auto; display: grid; gap: 12px; padding-top: 12px; }
+.proxima { margin: 0; font-size: .9rem; color: var(--suave); }
 
 @media (max-width: 600px) {
   .conteudo { padding: 24px 16px 48px; }

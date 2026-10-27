@@ -34,6 +34,21 @@ RESERVAS_DE_EXEMPLO = [
 ]
 
 
+# Reservas de hoje, para a barra de disponibilidade não aparecer vazia na demonstração:
+# área, bloco, número, duração em horas. O início é o primeiro horário cheio que a antecedência da área permite.
+RESERVAS_DE_HOJE = [
+    ("Quadra poliesportiva", "A", "202", 2),
+    ("Sala de estudos", "B", "102", 2),
+]
+
+
+def _primeira_hora_cheia(agora, antecedencia_horas):
+    """Primeiro horário cheio (HH:00) que respeita a antecedência mínima, a partir de agora."""
+    limite = agora + timedelta(hours=antecedencia_horas)
+    cheia = limite.replace(minute=0, second=0, microsecond=0)
+    return cheia if cheia >= limite else cheia + timedelta(hours=1)
+
+
 def carregar_dados_ficticios(conexao, agora=None):
     """Cadastra áreas, unidades e algumas reservas. Só age se o banco ainda não tiver áreas.
 
@@ -53,7 +68,23 @@ def carregar_dados_ficticios(conexao, agora=None):
         )
         if erros:  # os dados de exemplo precisam obedecer às mesmas regras do sistema
             raise ValueError(f"Reserva de exemplo inválida ({area}, {data}): {erros}")
+
+    _reservar_para_hoje(conexao, agora, ids_das_areas, ids_das_unidades)
     return True
+
+
+def _reservar_para_hoje(conexao, agora, ids_das_areas, ids_das_unidades):
+    """Tenta criar reservas ainda hoje. Se não couber (já é tarde), simplesmente não cria."""
+    antecedencias = {a[0]: a[6] for a in AREAS}
+    for area, bloco, numero, horas in RESERVAS_DE_HOJE:
+        comeco = _primeira_hora_cheia(agora, antecedencias[area])
+        if comeco.date() != agora.date():
+            continue
+        fim = comeco + timedelta(hours=horas)
+        servicos.reservar(
+            conexao, ids_das_areas[area], ids_das_unidades[(bloco, numero)],
+            comeco.strftime("%Y-%m-%d"), comeco.strftime("%H:%M"), fim.strftime("%H:%M"), agora,
+        )  # erros (ex.: passa do horário de fechamento) são ignorados de propósito
 
 
 if __name__ == "__main__":
