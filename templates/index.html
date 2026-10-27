@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+  <h1>Áreas comuns</h1>
+  <p class="subtitulo">Escolha uma área para ver os horários e reservar.</p>
+
+  <div class="grade-areas">
+    {% for c in cartoes %}
+      <article class="cartao-area">
+        <h2><a href="{{ url_for('index') }}">{{ c.area['nome'] }}</a></h2>
+        <p class="descricao">{{ c.area['descricao'] }}</p>
+
+        <div class="barra-dia" role="img" aria-label="Ocupação de hoje: {{ c.area['abre'] }} às {{ c.area['fecha'] }}">
+          {% for s in c.segmentos %}
+            <span class="barra-ocupado" style="left: {{ s.esquerda }}%; width: {{ s.largura }}%" title="{{ s.inicio }} às {{ s.fim }}"></span>
+          {% endfor %}
+        </div>
+        <div class="barra-legenda"><span>{{ c.area['abre'] }}</span><span>hoje</span><span>{{ c.area['fecha'] }}</span></div>
+
+        <dl class="dados">
+          <div><dt>Capacidade</dt><dd>{{ c.area['capacidade'] }} pessoas</dd></div>
+          <div><dt>Duração máxima</dt><dd>{{ c.area['duracao_max_horas'] }} h</dd></div>
+          <div><dt>Antecedência mínima</dt><dd>{{ c.area['antecedencia_min_horas'] }} h</dd></div>
+        </dl>
+
+        <p class="proxima">
+          {% if c.proxima %}Próxima reserva: {{ c.proxima['data']|data_curta }}, {{ c.proxima['inicio'] }}
+          {% else %}Sem reservas marcadas{% endif %}
+        </p>
+      </article>
+    {% endfor %}
+  </div>
+{% endblock %}

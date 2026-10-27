@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block titulo %}Residencial Aurora{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topo">
+    <div class="topo-interno">
+      <a class="marca" href="{{ url_for('index') }}">
+        <svg class="marca-simbolo" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M5 23h22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M9 23a7 7 0 0 1 14 0z" fill="currentColor"/>
+          <path d="M16 8v3M7.5 13l2 2M24.5 13l-2 2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <span>Residencial Aurora</span>
+      </a>
+      <nav class="menu" aria-label="Principal">
+        <a href="{{ url_for('index') }}" {% if request.endpoint in ('index', 'area') %}aria-current="page"{% endif %}>Áreas</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="conteudo">
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+      {% for tipo, texto in mensagens %}
+        <p class="aviso {{ tipo }}" role="{{ 'alert' if tipo == 'erro' else 'status' }}">{{ texto }}</p>
+      {% endfor %}
+    {% endwith %}
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <footer class="rodape">Projeto de portfólio. Todos os nomes, unidades e reservas são fictícios.</footer>
+</body>
+</html>
