@@ -151,3 +151,21 @@ def test_linha_do_tempo_marca_horas_ocupadas():
 
 def test_linha_do_tempo_ignora_canceladas():
     assert all(f["reserva"] is None for f in regras.linha_do_tempo(SALAO, [reserva("18:00", "20:00", status="cancelada")]))
+
+
+# --- barra do dia --------------------------------------------------------
+
+def test_segmentos_do_dia_em_porcentagem():
+    # quadra funciona 07:00-22:00 (900 min). 12:00-15:00 começa em 300 min (33,33%) e dura 180 min (20%)
+    segmentos = regras.segmentos_do_dia(QUADRA, [reserva("12:00", "15:00")])
+    assert segmentos == [{"esquerda": 33.33, "largura": 20.0, "inicio": "12:00", "fim": "15:00"}]
+
+
+def test_segmentos_ignoram_canceladas_e_cortam_o_que_passa_do_funcionamento():
+    segmentos = regras.segmentos_do_dia(QUADRA, [reserva("06:00", "08:00"), reserva("10:00", "11:00", status="cancelada")])
+    assert len(segmentos) == 1
+    assert segmentos[0]["esquerda"] == 0 and segmentos[0]["largura"] == 6.67  # só 07:00-08:00 cabe na barra
+
+
+def test_segmentos_sem_reservas():
+    assert regras.segmentos_do_dia(QUADRA, []) == []

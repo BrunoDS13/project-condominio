@@ -122,3 +122,29 @@ def linha_do_tempo(area, reservas_do_dia):
         )
         faixas.append({"inicio": para_hhmm(comeco), "fim": para_hhmm(termino), "reserva": ocupada_por})
     return faixas
+
+
+def segmentos_do_dia(area, reservas_do_dia):
+    """Calcula os trechos ocupados do dia como porcentagens da largura da barra (0 a 100).
+
+    A barra vai da abertura ao fechamento da área. Devolve uma lista de dicionários:
+    {'esquerda': 35.7, 'largura': 28.6, 'inicio': '14:00', 'fim': '18:00'}.
+    """
+    abre, fecha = para_minutos(area["abre"]), para_minutos(area["fecha"])
+    total = fecha - abre
+    segmentos = []
+    for r in reservas_do_dia:
+        if r["status"] != "confirmada":
+            continue
+        comeco, termino = max(para_minutos(r["inicio"]), abre), min(para_minutos(r["fim"]), fecha)
+        if termino <= comeco:
+            continue
+        segmentos.append(
+            {
+                "esquerda": round((comeco - abre) / total * 100, 2),
+                "largura": round((termino - comeco) / total * 100, 2),
+                "inicio": r["inicio"],
+                "fim": r["fim"],
+            }
+        )
+    return segmentos
