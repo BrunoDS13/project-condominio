@@ -102,3 +102,22 @@ a { color: inherit; }
   .duas-colunas { grid-template-columns: 1fr; gap: 28px; }
   .painel-reserva { position: static; }
 }
+
+.filtros { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; margin-bottom: 24px; }
+.filtros label { display: grid; gap: 4px; font-size: .85rem; font-weight: 600; color: var(--tinta); }
+.filtros select { font: inherit; font-weight: 400; padding: 9px 12px; border: 1px solid var(--linha); border-radius: 10px; background: var(--fundo); color: var(--tinta); }
+.filtros .marcar { display: flex; align-items: center; gap: 8px; font-weight: 400; padding-bottom: 10px; }
+
+.tabela { width: 100%; border-collapse: collapse; }
+.tabela th { text-align: left; font-size: .8rem; font-weight: 600; color: var(--suave); padding: 0 12px 10px 0; border-bottom: 1px solid var(--linha); }
+.tabela td { padding: 14px 12px 14px 0; border-bottom: 1px solid var(--linha-clara); vertical-align: top; }
+.tabela small { color: var(--suave); }
+.tabela .numero { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabela tr.cancelada td { color: var(--suave); }
+.tabela tr.cancelada td:not(.acao) { text-decoration: line-through; }
+.tabela .acao { text-align: right; white-space: nowrap; padding-right: 0; }
+.situacao { color: var(--suave); font-size: .9rem; }
+.botao-texto { font: inherit; font-weight: 600; color: var(--erro); background: none; border: 0; padding: 4px 0; cursor: pointer; text-decoration: underline; }
+.vazio { color: var(--suave); padding: 32px 0; }
+.tabela-rolavel { overflow-x: auto; }
+.so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

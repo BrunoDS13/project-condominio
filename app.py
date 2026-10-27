@@ -136,6 +136,53 @@ def criar_app(caminho_banco=db.CAMINHO_PADRAO, agora=datetime.now):
         flash(f"Reserva confirmada para {formatar_data(data)}, das {inicio} às {fim}.", "ok")
         return redirect(url_for("area", area_id=area_id, data=data))
 
+    @app.route("/reservas")
+    def reservas():
+        area_id = request.args.get("area", type=int)
+        unidade_id = request.args.get("unidade", type=int)
+        status = request.args.get("status", db.STATUS_CONFIRMADA)
+        if status not in ("", db.STATUS_CONFIRMADA, db.STATUS_CANCELADA):
+            status = db.STATUS_CONFIRMADA
+        incluir_passadas = request.args.get("passadas") == "1"
+
+        con = conexao()
+        lista = db.listar_reservas(
+            con,
+            area_id=area_id,
+            unidade_id=unidade_id,
+            status=status or None,
+            a_partir_de=None if incluir_passadas else hoje_iso(),
+        )
+        areas = db.listar_areas(con)
+        unidades = db.listar_unidades(con)
+        con.close()
+
+        linhas = []
+        for r in lista:
+            pode, motivo = regras.pode_cancelar(r, agora())
+            linhas.append({"reserva": r, "pode_cancelar": pode, "motivo": motivo})
+        return render_template(
+            "reservas.html",
+            linhas=linhas,
+            areas=areas,
+            unidades=unidades,
+            area_escolhida=area_id,
+            unidade_escolhida=unidade_id,
+            status=status,
+            incluir_passadas=incluir_passadas,
+        )
+
+    @app.route("/reservas/<int:reserva_id>/cancelar", methods=["POST"])
+    def cancelar(reserva_id):
+        con = conexao()
+        cancelou, motivo = servicos.cancelar(con, reserva_id, agora())
+        con.close()
+        if cancelou:
+            flash("Reserva cancelada. O horário voltou a ficar livre.", "ok")
+        else:
+            flash(motivo, "erro")
+        return redirect(url_for("reservas"))
+
     return app
 
 

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block titulo %}Reservas | Residencial Aurora{% endblock %}
+
+{% block conteudo %}
+  <h1>Reservas</h1>
+  <p class="subtitulo">Consulte e cancele reservas. Cancelamentos exigem pelo menos 24 h de antecedência.</p>
+
+  <form method="get" class="filtros">
+    <label>Área
+      <select name="area">
+        <option value="">Todas</option>
+        {% for a in areas %}<option value="{{ a['id'] }}" {{ 'selected' if a['id'] == area_escolhida }}>{{ a['nome'] }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Unidade
+      <select name="unidade">
+        <option value="">Todas</option>
+        {% for u in unidades %}<option value="{{ u['id'] }}" {{ 'selected' if u['id'] == unidade_escolhida }}>Bloco {{ u['bloco'] }}, apto {{ u['numero'] }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Situação
+      <select name="status">
+        <option value="confirmada" {{ 'selected' if status == 'confirmada' }}>Confirmadas</option>
+        <option value="cancelada" {{ 'selected' if status == 'cancelada' }}>Canceladas</option>
+        <option value="" {{ 'selected' if status == '' }}>Todas</option>
+      </select>
+    </label>
+    <label class="marcar"><input type="checkbox" name="passadas" value="1" {{ 'checked' if incluir_passadas }}> Incluir datas passadas</label>
+    <button type="submit" class="botao">Filtrar</button>
+  </form>
+
+  {% if linhas %}
+    <div class="tabela-rolavel">
+      <table class="tabela">
+        <thead>
+          <tr><th>Data</th><th>Horário</th><th>Área</th><th>Unidade</th><th>Observação</th><th><span class="so-leitor">Ações</span></th></tr>
+        </thead>
+        <tbody>
+          {% for l in linhas %}
+            {% set r = l.reserva %}
+            <tr class="{{ 'cancelada' if r['status'] == 'cancelada' }}">
+              <td>{{ r['data']|data_curta }}</td>
+              <td class="numero">{{ r['inicio'] }} às {{ r['fim'] }}</td>
+              <td>{{ r['area_nome'] }}</td>
+              <td>Bloco {{ r['bloco'] }}, apto {{ r['numero'] }}<br><small>{{ r['morador'] }}</small></td>
+              <td>{{ r['observacao'] or '–' }}</td>
+              <td class="acao">
+                {% if r['status'] == 'cancelada' %}
+                  <span class="situacao">Cancelada</span>
+                {% elif l.pode_cancelar %}
+                  <form method="post" action="{{ url_for('cancelar', reserva_id=r['id']) }}" onsubmit="return confirm('Cancelar esta reserva?')">
+                    <button type="submit" class="botao-texto">Cancelar</button>
+                  </form>
+                {% else %}
+                  <span class="situacao" title="{{ l.motivo }}">Fora do prazo</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="vazio">Nenhuma reserva encontrada com esses filtros.</p>
+  {% endif %}
+{% endblock %}

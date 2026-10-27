@@ -150,3 +150,61 @@ def test_reservar_mostra_todos_os_motivos_de_uma_vez(client, tmp_path):
 
 def test_reservar_sem_area_da_400(client, tmp_path):
     assert client.post("/reservar", data={"unidade_id": 1}).status_code == 400
+
+
+# --- lista de reservas e cancelamento ------------------------------------
+
+def test_lista_mostra_as_reservas_futuras_confirmadas(client):
+    html = client.get("/reservas").get_data(as_text=True)
+    assert "Aniversário de 8 anos" in html
+    assert "Família Almeida" in html
+    assert html.count("<tr") == 1 + len(seed.RESERVAS_DE_EXEMPLO) + len(seed.RESERVAS_DE_HOJE)  # cabeçalho + linhas
+
+
+def test_filtrar_por_area_e_unidade(client, tmp_path):
+    salao = id_da_area(tmp_path, "Salão de festas")
+    html = client.get(f"/reservas?area={salao}").get_data(as_text=True)
+    assert html.count("<tr") == 1 + 2  # cabeçalho + as duas reservas do salão
+    assert "Churrasqueira</td>" not in html
+
+    con = db.conectar(tmp_path / "teste.db")
+    a101 = db.listar_unidades(con)[0]["id"]
+    html = client.get(f"/reservas?unidade={a101}").get_data(as_text=True)
+    assert html.count("<tr") == 1 + 1  # só o aniversário da A 101
+
+
+def test_filtro_de_situacao_invalido_volta_ao_padrao(client):
+    assert client.get("/reservas?status=lixo").status_code == 200
+
+
+def test_cancelar_reserva_pela_tela(client, tmp_path):
+    con = db.conectar(tmp_path / "teste.db")
+    aniversario = next(r for r in db.listar_reservas(con) if r["observacao"] == "Aniversário de 8 anos")  # em 3 dias
+    resposta = client.post(f"/reservas/{aniversario['id']}/cancelar", follow_redirects=True)
+    assert "Reserva cancelada. O horário voltou a ficar livre." in resposta.get_data(as_text=True)
+    assert db.buscar_reserva(con, aniversario["id"])["status"] == "cancelada"
+    assert "Aniversário de 8 anos" not in client.get("/reservas").get_data(as_text=True)  # saiu da lista de confirmadas
+    assert "Aniversário de 8 anos" in client.get("/reservas?status=cancelada").get_data(as_text=True)
+
+
+def test_nao_cancela_fora_do_prazo(client, tmp_path):
+    con = db.conectar(tmp_path / "teste.db")
+    de_hoje = next(r for r in db.listar_reservas(con) if r["data"] == "2026-10-27")  # começa em poucas horas
+    html = client.post(f"/reservas/{de_hoje['id']}/cancelar", follow_redirects=True).get_data(as_text=True)
+    assert "24 horas de antecedência" in html
+    assert db.buscar_reserva(con, de_hoje["id"])["status"] == "confirmada"
+
+
+def test_botao_cancelar_so_aparece_quando_permitido(client):
+    html = client.get("/reservas").get_data(as_text=True)
+    assert "botao-texto" in html  # reservas distantes podem ser canceladas
+    assert "Fora do prazo" in html  # as de hoje não
+
+
+def test_cancelar_reserva_inexistente(client):
+    html = client.post("/reservas/999/cancelar", follow_redirects=True).get_data(as_text=True)
+    assert "Reserva não encontrada." in html
+
+
+def test_cancelar_so_aceita_post(client):
+    assert client.get("/reservas/1/cancelar").status_code == 405
